@@ -1,36 +1,36 @@
 // ── InvoiceForm Component ─────────────────────────────────────────────
 import {
-    Invoice, ServiceItem, DoctorProfile,
-    getDoctorProfile, saveDoctorProfile, saveInvoice,
-    createNewInvoice, formatIDR
+  Invoice, ServiceItem, DoctorProfile,
+  getDoctorProfile, saveDoctorProfile, saveInvoice,
+  createNewInvoice, formatIDR
 } from '../core/storage';
 
 interface InvoiceFormProps {
-    existing?: Invoice;         // If set, we're editing
-    onSave: (inv: Invoice) => void;
-    onCancel: () => void;
+  existing?: Invoice;         // If set, we're editing
+  onSave: (inv: Invoice) => void;
+  onCancel: () => void;
 }
 
 export function renderInvoiceForm(container: HTMLElement, props: InvoiceFormProps) {
-    const { existing, onSave, onCancel } = props;
-    const isEdit = !!existing;
+  const { existing, onSave, onCancel } = props;
+  const isEdit = !!existing;
 
-    // Load doctor profile as default values
-    const profile: DoctorProfile = getDoctorProfile() || {
-        name: '', clinicName: '', address: '', phone: '', sip: '',
-    };
+  // Load doctor profile as default values
+  const profile: DoctorProfile = getDoctorProfile() || {
+    name: '', clinicName: '', address: '', phone: '', sip: '',
+  };
 
-    // Services rows state
-    let services: ServiceItem[] = existing?.services || [
-        { name: 'Konsultasi', qty: 1, price: 100000 },
-    ];
+  // Services rows state
+  let services: ServiceItem[] = existing?.services || [
+    { name: 'Konsultasi', qty: 1, price: 100000 },
+  ];
 
-    function getTotal(): number {
-        return services.reduce((sum, s) => sum + s.qty * s.price, 0);
-    }
+  function getTotal(): number {
+    return services.reduce((sum, s) => sum + s.qty * s.price, 0);
+  }
 
-    function render() {
-        container.innerHTML = `
+  function render() {
+    container.innerHTML = `
       <div class="form-card">
         <h2>${isEdit ? '✏️ Edit Invoice' : '📝 Buat Invoice Baru'}</h2>
 
@@ -144,131 +144,142 @@ export function renderInvoiceForm(container: HTMLElement, props: InvoiceFormProp
         </form>
       </div>
     `;
-        wireEvents();
-    }
+    wireEvents();
+  }
 
-    function renderServices(): string {
-        return services.map((s, i) => `
-      <div class="form-row" data-service-idx="${i}" style="align-items:flex-end;margin-bottom:8px;">
-        <div class="form-group" style="flex:2;margin-bottom:0;">
-          <label class="form-label">Nama Layanan</label>
-          <input class="form-input svc-name" type="text" placeholder="Konsultasi, Obat, dll"
-                 value="${s.name}" data-idx="${i}" />
+  function renderServices(): string {
+    return services.map((s, i) => `
+      <div class="service-row" data-service-idx="${i}" style="
+        background:var(--bg-3);
+        border:1px solid var(--border-subtle);
+        border-radius:var(--radius-sm);
+        padding:12px;
+        margin-bottom:8px;
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+      ">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div class="form-group" style="flex:1;margin-bottom:0;">
+            <label class="form-label">Nama Layanan</label>
+            <input class="form-input svc-name" type="text" placeholder="Konsultasi, Obat, dll"
+                   value="${s.name}" data-idx="${i}" />
+          </div>
+          <button type="button" class="btn btn-danger svc-remove" data-idx="${i}"
+                  style="padding:8px 12px;margin-top:20px;flex-shrink:0;min-width:36px;height:36px;
+                  ${services.length === 1 ? 'opacity:0.3;cursor:default;' : ''}">✕</button>
         </div>
-        <div class="form-group" style="flex:1;margin-bottom:0;">
-          <label class="form-label">Qty</label>
-          <input class="form-input svc-qty" type="number" min="1" value="${s.qty}" data-idx="${i}" style="text-align:center;" />
-        </div>
-        <div class="form-group" style="flex:2;margin-bottom:0;">
-          <label class="form-label">Harga (Rp)</label>
-          <div class="form-input-currency">
-            <input class="form-input svc-price" type="number" min="0" value="${s.price}" data-idx="${i}" style="padding-left:36px;" />
+        <div style="display:flex;gap:8px;">
+          <div class="form-group" style="flex:1;margin-bottom:0;">
+            <label class="form-label">Qty</label>
+            <input class="form-input svc-qty" type="number" min="1" value="${s.qty}" data-idx="${i}" style="text-align:center;" />
+          </div>
+          <div class="form-group" style="flex:2;margin-bottom:0;">
+            <label class="form-label">Harga (Rp)</label>
+            <div class="form-input-currency">
+              <input class="form-input svc-price" type="number" min="0" value="${s.price}" data-idx="${i}" style="padding-left:36px;" />
+            </div>
           </div>
         </div>
-        <button type="button" class="btn btn-danger svc-remove" data-idx="${i}"
-                style="padding:10px 12px;margin-bottom:0;min-width:40px;${services.length === 1 ? 'opacity:0.3;cursor:default;' : ''}">
-          ✕
-        </button>
       </div>
     `).join('');
-    }
+  }
 
-    function readServicesFromDOM() {
-        const names = container.querySelectorAll('.svc-name');
-        const qtys = container.querySelectorAll('.svc-qty');
-        const prices = container.querySelectorAll('.svc-price');
-        services = Array.from(names).map((_, i) => ({
-            name: (names[i] as HTMLInputElement).value.trim(),
-            qty: parseInt((qtys[i] as HTMLInputElement).value) || 1,
-            price: parseInt((prices[i] as HTMLInputElement).value) || 0,
-        }));
-    }
+  function readServicesFromDOM() {
+    const names = container.querySelectorAll('.svc-name');
+    const qtys = container.querySelectorAll('.svc-qty');
+    const prices = container.querySelectorAll('.svc-price');
+    services = Array.from(names).map((_, i) => ({
+      name: (names[i] as HTMLInputElement).value.trim(),
+      qty: parseInt((qtys[i] as HTMLInputElement).value) || 1,
+      price: parseInt((prices[i] as HTMLInputElement).value) || 0,
+    }));
+  }
 
-    function refreshTotal() {
+  function refreshTotal() {
+    readServicesFromDOM();
+    const totalEl = container.querySelector('#total-display');
+    if (totalEl) totalEl.textContent = formatIDR(getTotal());
+  }
+
+  function refreshServices() {
+    const listEl = container.querySelector('#services-list');
+    if (listEl) {
+      listEl.innerHTML = renderServices();
+      wireServiceEvents();
+    }
+    refreshTotal();
+  }
+
+  function wireServiceEvents() {
+    // Input changes — update total
+    container.querySelectorAll('.svc-qty, .svc-price').forEach(inp => {
+      inp.addEventListener('input', refreshTotal);
+    });
+    // Remove service row
+    container.querySelectorAll('.svc-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (services.length <= 1) return;
+        const idx = parseInt((btn as HTMLElement).dataset.idx!);
         readServicesFromDOM();
-        const totalEl = container.querySelector('#total-display');
-        if (totalEl) totalEl.textContent = formatIDR(getTotal());
-    }
+        services.splice(idx, 1);
+        refreshServices();
+      });
+    });
+  }
 
-    function refreshServices() {
-        readServicesFromDOM();
-        const listEl = container.querySelector('#services-list');
-        if (listEl) {
-            listEl.innerHTML = renderServices();
-            wireServiceEvents();
-        }
-        refreshTotal();
-    }
+  function wireEvents() {
+    wireServiceEvents();
 
-    function wireServiceEvents() {
-        // Input changes — update total
-        container.querySelectorAll('.svc-qty, .svc-price').forEach(inp => {
-            inp.addEventListener('input', refreshTotal);
-        });
-        // Remove service row
-        container.querySelectorAll('.svc-remove').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (services.length <= 1) return;
-                const idx = parseInt((btn as HTMLElement).dataset.idx!);
-                readServicesFromDOM();
-                services.splice(idx, 1);
-                refreshServices();
-            });
-        });
-    }
+    // Add service
+    container.querySelector('#add-service-btn')?.addEventListener('click', () => {
+      readServicesFromDOM();
+      services.push({ name: '', qty: 1, price: 0 });
+      refreshServices();
+    });
 
-    function wireEvents() {
-        wireServiceEvents();
+    // Cancel
+    container.querySelector('#cancel-btn')?.addEventListener('click', onCancel);
 
-        // Add service
-        container.querySelector('#add-service-btn')?.addEventListener('click', () => {
-            readServicesFromDOM();
-            services.push({ name: '', qty: 1, price: 0 });
-            refreshServices();
-        });
+    // Submit
+    container.querySelector('#invoice-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      readServicesFromDOM();
 
-        // Cancel
-        container.querySelector('#cancel-btn')?.addEventListener('click', onCancel);
+      // Save doctor profile
+      const doctorProfile: DoctorProfile = {
+        name: (container.querySelector('#inp-doctor') as HTMLInputElement).value.trim(),
+        clinicName: (container.querySelector('#inp-clinic') as HTMLInputElement).value.trim(),
+        address: (container.querySelector('#inp-address') as HTMLInputElement).value.trim(),
+        phone: (container.querySelector('#inp-phone') as HTMLInputElement).value.trim(),
+        sip: (container.querySelector('#inp-sip') as HTMLInputElement).value.trim(),
+      };
+      saveDoctorProfile(doctorProfile);
 
-        // Submit
-        container.querySelector('#invoice-form')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            readServicesFromDOM();
+      const invoiceData = {
+        patientName: (container.querySelector('#inp-patient') as HTMLInputElement).value.trim(),
+        patientAge: (container.querySelector('#inp-age') as HTMLInputElement).value.trim(),
+        date: (container.querySelector('#inp-date') as HTMLInputElement).value,
+        diagnose: (container.querySelector('#inp-diagnose') as HTMLInputElement).value.trim(),
+        notes: (container.querySelector('#inp-notes') as HTMLInputElement).value.trim(),
+        status: ((container.querySelector('#inp-status') as HTMLSelectElement).value) as 'paid' | 'pending',
+        services,
+        doctorName: doctorProfile.name,
+        clinicName: doctorProfile.clinicName,
+        clinicAddress: doctorProfile.address,
+      };
 
-            // Save doctor profile
-            const doctorProfile: DoctorProfile = {
-                name: (container.querySelector('#inp-doctor') as HTMLInputElement).value.trim(),
-                clinicName: (container.querySelector('#inp-clinic') as HTMLInputElement).value.trim(),
-                address: (container.querySelector('#inp-address') as HTMLInputElement).value.trim(),
-                phone: (container.querySelector('#inp-phone') as HTMLInputElement).value.trim(),
-                sip: (container.querySelector('#inp-sip') as HTMLInputElement).value.trim(),
-            };
-            saveDoctorProfile(doctorProfile);
+      let invoice: Invoice;
+      if (existing) {
+        invoice = { ...existing, ...invoiceData };
+      } else {
+        invoice = createNewInvoice(invoiceData);
+      }
 
-            const invoiceData = {
-                patientName: (container.querySelector('#inp-patient') as HTMLInputElement).value.trim(),
-                patientAge: (container.querySelector('#inp-age') as HTMLInputElement).value.trim(),
-                date: (container.querySelector('#inp-date') as HTMLInputElement).value,
-                diagnose: (container.querySelector('#inp-diagnose') as HTMLInputElement).value.trim(),
-                notes: (container.querySelector('#inp-notes') as HTMLInputElement).value.trim(),
-                status: ((container.querySelector('#inp-status') as HTMLSelectElement).value) as 'paid' | 'pending',
-                services,
-                doctorName: doctorProfile.name,
-                clinicName: doctorProfile.clinicName,
-                clinicAddress: doctorProfile.address,
-            };
+      saveInvoice(invoice);
+      onSave(invoice);
+    });
+  }
 
-            let invoice: Invoice;
-            if (existing) {
-                invoice = { ...existing, ...invoiceData };
-            } else {
-                invoice = createNewInvoice(invoiceData);
-            }
-
-            saveInvoice(invoice);
-            onSave(invoice);
-        });
-    }
-
-    render();
+  render();
 }

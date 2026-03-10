@@ -819,16 +819,114 @@ input[type="month"] {
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .main-content {
-    padding: 20px 16px;
+    padding: 16px 12px;
   }
 
   .auth-card {
-    padding: 28px 20px;
+    padding: 24px 16px;
   }
 
   .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+  }
+
+  /* Invoice table — scrollable wrapper di mobile */
+  .section-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .invoice-table {
+    min-width: 520px;
+  }
+
+  .invoice-table th,
+  .invoice-table td {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  /* Form card kompak */
+  .form-card {
+    padding: 18px 14px;
+  }
+
+  /* Nav: sembunyikan username, tampilkan avatar saja */
+  .user-badge .user-name {
+    display: none;
+  }
+
+  .user-badge {
+    padding: 5px 8px;
+  }
+
+  /* Form actions: stack di mobile */
+  .form-actions {
+    justify-content: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+  }
+
+  /* Preview modal full screen di mobile */
+  .preview-modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .preview-modal {
+    max-height: 95vh;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 12px 10px;
+  }
+
+  .nav {
+    padding: 0 12px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-card {
+    padding: 12px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .form-card {
+    padding: 14px 12px;
+    border-radius: 10px;
   }
 }
 

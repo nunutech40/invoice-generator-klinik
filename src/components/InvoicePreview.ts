@@ -2,24 +2,25 @@
 import { Invoice, ServiceItem, formatIDR, totalAmount } from '../core/storage';
 
 export function renderInvoicePreview(invoice: Invoice, onClose: () => void, onEdit?: () => void) {
-    const backdrop = document.createElement('div');
-    backdrop.className = 'preview-modal-backdrop';
+  const backdrop = document.createElement('div');
+  backdrop.className = 'preview-modal-backdrop';
 
-    const total = totalAmount(invoice.services);
-    const dateFormatted = new Date(invoice.date).toLocaleDateString('id-ID', {
-        day: 'numeric', month: 'long', year: 'numeric'
-    });
-    const createdFormatted = new Date(invoice.createdAt).toLocaleDateString('id-ID', {
-        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
+  const total = totalAmount(invoice.services);
+  const dateFormatted = new Date(invoice.date).toLocaleDateString('id-ID', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  });
+  const createdFormatted = new Date(invoice.createdAt).toLocaleDateString('id-ID', {
+    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
 
-    backdrop.innerHTML = `
+  backdrop.innerHTML = `
     <div class="preview-modal">
       <!-- Toolbar (hidden on print) -->
       <div class="preview-toolbar">
         <span>Preview Invoice — ${invoice.no}</span>
         <div class="preview-toolbar-actions">
           ${onEdit ? `<button id="preview-edit-btn" class="btn btn-ghost" style="padding:6px 14px;font-size:13px;">✏️ Edit</button>` : ''}
+          <button id="preview-wa-btn" class="btn" style="padding:6px 14px;font-size:13px;background:#25d366;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">📲 Kirim via WA</button>
           <button id="preview-print-btn" class="btn btn-success" style="padding:6px 14px;font-size:13px;">🖨️ Print / PDF</button>
           <button id="preview-close-btn" class="btn btn-ghost" style="padding:6px 14px;font-size:13px;">✕ Tutup</button>
         </div>
@@ -133,34 +134,68 @@ export function renderInvoicePreview(invoice: Invoice, onClose: () => void, onEd
     </div><!-- /preview-modal -->
   `;
 
-    document.body.appendChild(backdrop);
+  document.body.appendChild(backdrop);
 
-    // Wire close
-    backdrop.querySelector('#preview-close-btn')?.addEventListener('click', () => {
-        backdrop.remove();
-        onClose();
-    });
+  // Wire close
+  backdrop.querySelector('#preview-close-btn')?.addEventListener('click', () => {
+    backdrop.remove();
+    onClose();
+  });
 
-    // Wire print
-    backdrop.querySelector('#preview-print-btn')?.addEventListener('click', () => {
-        const printArea = backdrop.querySelector('#invoice-print-area') as HTMLElement;
-        const original = document.body.innerHTML;
-        document.body.innerHTML = printArea.outerHTML;
-        window.print();
-        document.body.innerHTML = original;
-        window.location.reload();
-    });
+  // Wire print
+  backdrop.querySelector('#preview-print-btn')?.addEventListener('click', () => {
+    const printArea = backdrop.querySelector('#invoice-print-area') as HTMLElement;
+    const original = document.body.innerHTML;
+    document.body.innerHTML = printArea.outerHTML;
+    window.print();
+    document.body.innerHTML = original;
+    window.location.reload();
+  });
 
-    // Wire edit
-    if (onEdit) {
-        backdrop.querySelector('#preview-edit-btn')?.addEventListener('click', () => {
-            backdrop.remove();
-            onEdit();
+  // Wire WhatsApp
+  backdrop.querySelector('#preview-wa-btn')?.addEventListener('click', async () => {
+    const serviceLines = invoice.services
+      .map(s => `  - ${s.name} (${s.qty}x): ${formatIDR(s.qty * s.price)}`)
+      .join('\n');
+    const waText =
+      `🏥 *Kwitansi dari ${invoice.clinicName}*\n` +
+      `*No:* ${invoice.no}\n` +
+      `*Tanggal:* ${dateFormatted}\n` +
+      `*Pasien:* ${invoice.patientName}\n` +
+      (invoice.diagnose ? `*Diagnosa:* ${invoice.diagnose}\n` : '') +
+      `\n*Layanan:*\n${serviceLines}\n` +
+      `\n*Total: ${formatIDR(total)}*\n` +
+      `*Status:* ${invoice.status === 'paid' ? '✅ LUNAS' : '⏳ BELUM LUNAS'}\n` +
+      `\n_Kwitansi digital via Klinik App_`;
+
+    // Try native share (mobile) — opens native share sheet
+    if ('share' in navigator) {
+      try {
+        await (navigator as Navigator & { share: (d: ShareData) => Promise<void> }).share({
+          title: `Kwitansi ${invoice.no}`,
+          text: waText,
         });
+        return;
+      } catch (_) {
+        // user cancelled or not supported — fall through to wa.me
+      }
     }
 
-    // Close on backdrop click
-    backdrop.addEventListener('click', (e) => {
-        if (e.target === backdrop) { backdrop.remove(); onClose(); }
+    // Fallback: open wa.me with pre-filled text
+    const encoded = encodeURIComponent(waText);
+    window.open(`https://wa.me/?text=${encoded}`, '_blank');
+  });
+
+  // Wire edit
+  if (onEdit) {
+    backdrop.querySelector('#preview-edit-btn')?.addEventListener('click', () => {
+      backdrop.remove();
+      onEdit();
     });
+  }
+
+  // Close on backdrop click
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) { backdrop.remove(); onClose(); }
+  });
 }
