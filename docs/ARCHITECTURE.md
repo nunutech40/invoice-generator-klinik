@@ -1,7 +1,7 @@
 # 🏥 Klinik App — Architecture & Design Documentation
 
-> **Last updated:** 2026-03-09
-> **Status:** MVP Live (local dev)
+> **Last updated:** 2026-03-10
+> **Status:** MVP Ready (pre-deploy — needs DNS/Nginx)
 > **Product:** Invoice & Kwitansi Generator untuk Dokter Praktek Mandiri
 
 ---
@@ -261,18 +261,30 @@ Production API hanya allow origin tertentu. Untuk dev dari localhost, `localhost
 
 ## 9. Deployment (Next Step)
 
-Belum di-deploy. Ikut pola atomic:
+Belum di-deploy. **Prerequisite:** butuh DNS subdomain `klinik.sains-atomic.web.id`.
 
+### Deploy Prerequisites
+1. DNS A record `klinik` → `103.181.143.73` di Cloudflare
+2. Nginx server block untuk `klinik.sains-atomic.web.id`
+3. Folder VPS: `sains-klinik-landing` + `sains-klinik-app`
+4. CORS_ORIGINS di .env tambah `https://klinik.sains-atomic.web.id`
+5. Restart API setelah update CORS
+
+### Deploy Steps
 ```bash
 # 1. Build
 cd klinik && npm run build
 
-# 2. Upload ke VPS (folder baru)
+# 2. Upload landing page
+scp -r landing/klinik-v1/* nunuadmin@103.181.143.73:/home/nunuadmin/sains-klinik-landing/
+
+# 3. Upload app
 scp -r dist/* nunuadmin@103.181.143.73:/home/nunuadmin/sains-klinik-app/
 
-# 3. Tambah Nginx config untuk subdomain klinik.sains-atomic.web.id
-# 4. Tambah DNS record di Cloudflare (A record: klinik → 103.181.143.73)
+# 4. Purge Cloudflare cache
 ```
+
+Detail lengkap: lihat `DEPLOYMENT.md` (root).
 
 ---
 
@@ -283,7 +295,9 @@ scp -r dist/* nunuadmin@103.181.143.73:/home/nunuadmin/sains-klinik-app/
 | Invoice hilang (localStorage) | Known, by design | User perlu tahu saat onboarding |
 | CORS issue saat dev | Fixed | localhost:5173 sudah di-whitelist di VPS |
 | Scroll/clear browser = data hilang | Known, MVP limitation | Dokumentasikan untuk user |
-| Product 'klinik' belum ada di DB | ❌ Belum setup | Harus tambah via admin panel sebelum launch |
+| Product 'klinik' belum ada di DB | ✅ Done | Dibuat 10 Mar 2026 via admin panel |
+| Landing page pricing statis | Known, by design | Harga hardcoded di HTML, update manual kalau ubah |
+| Invoice numbering setelah delete | Known, minor | Counter pakai array length, bisa duplicate setelah delete |
 | config.ts hardcode ke prod | Dev only | Jangan commit ke prod tanpa revert |
 
 ---
@@ -293,3 +307,4 @@ scp -r dist/* nunuadmin@103.181.143.73:/home/nunuadmin/sains-klinik-app/
 | Versi | Tanggal | Perubahan |
 |---|---|---|
 | v1 | 2026-03-09 | Initial MVP — auth, invoice CRUD, print, landing page |
+| v2 | 2026-03-10 | Publish review: product+plans created in DB, pricing sort fix deployed, deployment prerequisites documented, landing pricing noted as static |
