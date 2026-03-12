@@ -116,7 +116,7 @@ export async function register(email: string, password: string, name: string): P
             const data = await res.json().catch(() => ({}));
             const msg = data?.error?.message || data?.message || 'Registrasi gagal.';
             if (data?.error?.code === 'CONFLICT' || res.status === 409) {
-                return { ok: false, error: 'Email sudah terdaftar. Silakan login.' };
+                return { ok: false, error: 'Kamu sudah punya akun SAINS. Login dengan password yang sama untuk berlangganan Klinik.' };
             }
             return { ok: false, error: msg };
         }

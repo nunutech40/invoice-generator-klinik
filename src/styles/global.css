@@ -930,6 +930,59 @@ input[type="month"] {
   }
 }
 
+/* ── WhatsApp Float Button ── */
+.wa-float {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  animation: fadeUp 0.4s ease;
+}
+
+.wa-float-label {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
+
+.wa-float-btn {
+  width: 52px;
+  height: 52px;
+  background: #25d366;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.wa-float:hover .wa-float-btn {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(37, 211, 102, 0.5);
+}
+
+.wa-float-btn svg {
+  width: 26px;
+  height: 26px;
+  fill: white;
+}
+
+@media (max-width: 480px) {
+  .wa-float-label { display: none; }
+  .wa-float { bottom: 16px; right: 16px; }
+}
+
 /* ── Print styles ── */
 @media print {
   body {
@@ -938,7 +991,8 @@ input[type="month"] {
 
   .nav,
   .preview-toolbar,
-  .preview-modal-backdrop {
+  .preview-modal-backdrop,
+  .wa-float {
     display: none !important;
   }
 

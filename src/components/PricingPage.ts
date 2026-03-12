@@ -129,7 +129,7 @@ export function renderPricingPage(container: HTMLElement, onAccessGranted: () =>
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${getAccessToken()}`,
                     },
-                    body: JSON.stringify({ plan_id: selectedPlanId, utm_source: 'klinik-app' }),
+                    body: JSON.stringify({ plan_id: selectedPlanId, utm_source: 'klinik-app', return_url: window.location.origin }),
                 });
 
                 const data = await res.json();

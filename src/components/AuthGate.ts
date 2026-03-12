@@ -147,6 +147,18 @@ export function renderAuthGate(container: HTMLElement, onSuccess: () => void) {
                 setTimeout(() => { mode = 'login'; render(); }, 1500);
             } else {
                 showError(res.error || 'Registrasi gagal.');
+                // Auto-switch to login tab if email already exists (409)
+                if (res.error?.includes('sudah punya akun')) {
+                    const emailValue = email;
+                    setTimeout(() => {
+                        mode = 'login';
+                        render();
+                        // Pre-fill email for convenience
+                        const emailInput = container.querySelector('#inp-email') as HTMLInputElement;
+                        if (emailInput) emailInput.value = emailValue;
+                        showError('Akun ditemukan! Login dengan password yang sama untuk lanjut ke Klinik.');
+                    }, 1500);
+                }
             }
         });
     }
